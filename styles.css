@@ -101,6 +101,11 @@ h1 {
   line-height: 1.55;
 }
 
+.tool-grid {
+  display: grid;
+  gap: 28px;
+}
+
 .converter {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
@@ -113,10 +118,37 @@ h1 {
   padding: 26px;
 }
 
-.controls {
+.controls,
+.pdf-to-text {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
+}
+
+.pdf-to-text {
+  grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.section-heading {
+  display: grid;
+  gap: 8px;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: clamp(1.55rem, 3vw, 2.2rem);
+  letter-spacing: -0.04em;
+}
+
+.section-heading .eyebrow {
+  margin-bottom: 0;
+}
+
+.helper-text {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
 }
 
 .field {
@@ -158,6 +190,24 @@ select {
   padding: 0 14px;
 }
 
+input[type="file"] {
+  padding: 12px;
+  background: #fff;
+}
+
+.drop-zone {
+  display: grid;
+  gap: 10px;
+  border: 1px dashed rgba(49, 87, 255, 0.42);
+  border-radius: 22px;
+  padding: 20px;
+  background: rgba(237, 241, 255, 0.56);
+}
+
+#extracted-text {
+  min-height: 310px;
+}
+
 textarea:focus,
 input:focus,
 select:focus {
@@ -182,13 +232,15 @@ button {
   font-weight: 900;
 }
 
-#download-button {
+#download-button,
+#copy-text-button {
   color: #fff;
   background: var(--brand);
   box-shadow: 0 14px 28px rgba(49, 87, 255, 0.26);
 }
 
-#download-button:hover {
+#download-button:hover,
+#copy-text-button:hover {
   background: var(--brand-dark);
 }
 
@@ -253,7 +305,8 @@ button {
 
 @media (max-width: 900px) {
   .hero,
-  .converter {
+  .converter,
+  .pdf-to-text {
     grid-template-columns: 1fr;
   }
 

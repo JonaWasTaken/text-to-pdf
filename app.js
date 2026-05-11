@@ -152,6 +152,175 @@ function serializePdf(objects) {
   return chunks.join('');
 }
 
+
+function arrayBufferToBinaryString(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const chunkSize = 8192;
+
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    const chunk = bytes.subarray(index, index + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+
+  return binary;
+}
+
+function decodePdfEscapes(value) {
+  let output = '';
+
+  for (let index = 0; index < value.length; index += 1) {
+    const character = value[index];
+
+    if (character !== '\\') {
+      output += character;
+      continue;
+    }
+
+    const nextCharacter = value[index + 1];
+
+    if (!nextCharacter) {
+      continue;
+    }
+
+    const escapeMap = {
+      n: '\n',
+      r: '\r',
+      t: '\t',
+      b: '\b',
+      f: '\f',
+      '(': '(',
+      ')': ')',
+      '\\': '\\',
+    };
+
+    if (escapeMap[nextCharacter]) {
+      output += escapeMap[nextCharacter];
+      index += 1;
+      continue;
+    }
+
+    if (/[0-7]/.test(nextCharacter)) {
+      const octalMatch = value.slice(index + 1).match(/^[0-7]{1,3}/);
+      if (octalMatch) {
+        output += String.fromCharCode(parseInt(octalMatch[0], 8));
+        index += octalMatch[0].length;
+        continue;
+      }
+    }
+
+    if (nextCharacter === '\n' || nextCharacter === '\r') {
+      index += nextCharacter === '\r' && value[index + 2] === '\n' ? 2 : 1;
+      continue;
+    }
+
+    output += nextCharacter;
+    index += 1;
+  }
+
+  return output;
+}
+
+function decodeHexPdfString(hexValue) {
+  const normalizedHex = hexValue.replace(/\s+/g, '');
+  let output = '';
+
+  for (let index = 0; index < normalizedHex.length; index += 2) {
+    const byte = normalizedHex.slice(index, index + 2).padEnd(2, '0');
+    output += String.fromCharCode(parseInt(byte, 16));
+  }
+
+  return output;
+}
+
+function readLiteralPdfString(content, startIndex) {
+  let depth = 1;
+  let value = '';
+
+  for (let index = startIndex + 1; index < content.length; index += 1) {
+    const character = content[index];
+
+    if (character === '\\') {
+      value += character;
+      if (index + 1 < content.length) {
+        value += content[index + 1];
+        index += 1;
+      }
+      continue;
+    }
+
+    if (character === '(') {
+      depth += 1;
+    }
+
+    if (character === ')') {
+      depth -= 1;
+      if (depth === 0) {
+        return { value: decodePdfEscapes(value), endIndex: index };
+      }
+    }
+
+    value += character;
+  }
+
+  return { value: decodePdfEscapes(value), endIndex: content.length - 1 };
+}
+
+function extractTextFromPdfContent(content) {
+  const pieces = [];
+
+  for (let index = 0; index < content.length; index += 1) {
+    const character = content[index];
+
+    if (character === '(') {
+      const literal = readLiteralPdfString(content, index);
+      pieces.push(literal.value);
+      index = literal.endIndex;
+      continue;
+    }
+
+    if (character === '<' && content[index + 1] !== '<') {
+      const endIndex = content.indexOf('>', index + 1);
+      if (endIndex !== -1) {
+        pieces.push(decodeHexPdfString(content.slice(index + 1, endIndex)));
+        index = endIndex;
+      }
+      continue;
+    }
+
+    if (content.startsWith('T*', index) || content.startsWith("'", index) || content.startsWith('"', index)) {
+      pieces.push('\n');
+    }
+  }
+
+  return pieces.join('');
+}
+
+function extractTextFromPdfBinary(binary) {
+  const streamMatches = [...binary.matchAll(/stream\r?\n?([\s\S]*?)\r?\n?endstream/g)];
+  const contents = streamMatches.length ? streamMatches.map((match) => match[1]) : [binary];
+  const text = contents
+    .map(extractTextFromPdfContent)
+    .join('\n')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  return text;
+}
+
+function downloadText(text, fileName = 'extracted-text.txt') {
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 function downloadPdf(pdfContent, fileName) {
   const blob = new Blob([pdfContent], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
@@ -183,7 +352,15 @@ function updateSummary() {
   document.querySelector('#page-count').textContent = pages.length.toLocaleString();
 }
 
-function initializeApp() {
+function getExtractedTextFileName(pdfFileName) {
+  const baseName = String(pdfFileName || 'extracted-text')
+    .replace(/\.pdf$/i, '')
+    .trim();
+
+  return sanitizeFileName(baseName).replace(/\.pdf$/i, '.txt');
+}
+
+function initializeTextToPdf() {
   const form = document.querySelector('#pdf-form');
   const sourceText = document.querySelector('#source-text');
   const clearButton = document.querySelector('#clear-button');
@@ -221,14 +398,100 @@ function initializeApp() {
   updateSummary();
 }
 
+function initializePdfToText() {
+  const pdfInput = document.querySelector('#pdf-file');
+  const extractedText = document.querySelector('#extracted-text');
+  const copyButton = document.querySelector('#copy-text-button');
+  const downloadTextButton = document.querySelector('#download-text-button');
+  const clearPdfButton = document.querySelector('#clear-pdf-button');
+  const pdfStatusMessage = document.querySelector('#pdf-status-message');
+  let selectedPdfName = 'extracted-text.pdf';
+
+  pdfInput.addEventListener('change', async () => {
+    const file = pdfInput.files[0];
+
+    if (!file) {
+      return;
+    }
+
+    selectedPdfName = file.name;
+    pdfStatusMessage.textContent = `Reading ${file.name}...`;
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const binary = arrayBufferToBinaryString(buffer);
+      const text = extractTextFromPdfBinary(binary);
+      extractedText.value = text;
+      pdfStatusMessage.textContent = text
+        ? `Extracted ${text.length.toLocaleString()} characters from ${file.name}.`
+        : 'No selectable text was found. This may be a scanned or compressed PDF.';
+    } catch (error) {
+      extractedText.value = '';
+      pdfStatusMessage.textContent = 'Could not extract text from that PDF.';
+    }
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!extractedText.value) {
+      pdfStatusMessage.textContent = 'Extract text before copying.';
+      return;
+    }
+
+    if (!navigator.clipboard) {
+      extractedText.removeAttribute('readonly');
+      extractedText.select();
+      extractedText.setAttribute('readonly', '');
+      pdfStatusMessage.textContent = 'Clipboard unavailable. The extracted text is selected for manual copy.';
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(extractedText.value);
+      pdfStatusMessage.textContent = 'Extracted text copied to clipboard.';
+    } catch (error) {
+      extractedText.removeAttribute('readonly');
+      extractedText.select();
+      extractedText.setAttribute('readonly', '');
+      pdfStatusMessage.textContent = 'Clipboard permission denied. The extracted text is selected for manual copy.';
+    }
+  });
+
+  downloadTextButton.addEventListener('click', () => {
+    if (!extractedText.value) {
+      pdfStatusMessage.textContent = 'Extract text before downloading a .txt file.';
+      return;
+    }
+
+    const fileName = getExtractedTextFileName(selectedPdfName);
+    downloadText(extractedText.value, fileName);
+    pdfStatusMessage.textContent = `Downloaded ${fileName}.`;
+  });
+
+  clearPdfButton.addEventListener('click', () => {
+    pdfInput.value = '';
+    extractedText.value = '';
+    selectedPdfName = 'extracted-text.pdf';
+    pdfStatusMessage.textContent = 'Select a PDF to extract text.';
+  });
+}
+
+function initializeApp() {
+  initializeTextToPdf();
+  initializePdfToText();
+}
+
 if (typeof document !== 'undefined') {
   initializeApp();
 }
 
 if (typeof module !== 'undefined') {
   module.exports = {
+    arrayBufferToBinaryString,
     buildPdf,
     escapePdfString,
+    extractTextFromPdfBinary,
+    extractTextFromPdfContent,
+    getExtractedTextFileName,
     paginateText,
     sanitizeFileName,
   };
