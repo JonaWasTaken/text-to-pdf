@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Text and PDF Converter</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Instant document tools</p>
+          <h1 id="page-title">Text ↔ PDF Converter</h1>
+          <p class="hero-copy">
+            Create PDFs from text or extract readable text from text-based PDFs directly in your browser.
+          </p>
+        </div>
+        <div class="hero-card" aria-label="Privacy note">
+          <span class="hero-card__icon" aria-hidden="true">🔒</span>
+          <div>
+            <strong>Private by design</strong>
+            <p>Your files are processed locally. No text or PDF is uploaded to a server.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="tool-grid" aria-label="PDF conversion tools">
+        <section class="converter" aria-labelledby="text-to-pdf-title">
+          <form id="pdf-form" class="panel controls">
+            <div class="section-heading field--full">
+              <p class="eyebrow">Text to PDF</p>
+              <h2 id="text-to-pdf-title">Write text, download PDF</h2>
+            </div>
+
+            <div class="field field--full">
+              <label for="source-text">Your text</label>
+              <textarea
+                id="source-text"
+                name="source-text"
+                rows="16"
+                placeholder="Type or paste text here..."
+              >Welcome to your new PDF!
+
+Replace this text with your own content, choose your page settings, and click Download PDF.</textarea>
+            </div>
+
+            <div class="field">
+              <label for="file-name">File name</label>
+              <input id="file-name" name="file-name" type="text" value="my-document" />
+            </div>
+
+            <div class="field">
+              <label for="page-size">Page size</label>
+              <select id="page-size" name="page-size">
+                <option value="letter">Letter</option>
+                <option value="a4">A4</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="font-size">Font size</label>
+              <input id="font-size" name="font-size" type="number" min="8" max="28" value="12" />
+            </div>
+
+            <div class="field">
+              <label for="margin-size">Margin</label>
+              <select id="margin-size" name="margin-size">
+                <option value="36">Narrow</option>
+                <option value="54" selected>Standard</option>
+                <option value="72">Wide</option>
+              </select>
+            </div>
+
+            <div class="actions field--full">
+              <button id="download-button" type="submit">Download PDF</button>
+              <button id="clear-button" type="button" class="button-secondary">Clear text</button>
+            </div>
+          </form>
+
+          <aside class="panel preview" aria-labelledby="preview-title">
+            <div class="preview-sheet">
+              <h2 id="preview-title">Live summary</h2>
+              <dl class="stats">
+                <div>
+                  <dt>Characters</dt>
+                  <dd id="character-count">0</dd>
+                </div>
+                <div>
+                  <dt>Words</dt>
+                  <dd id="word-count">0</dd>
+                </div>
+                <div>
+                  <dt>Estimated pages</dt>
+                  <dd id="page-count">1</dd>
+                </div>
+              </dl>
+              <p id="status-message" class="status" role="status" aria-live="polite">
+                Ready to create your PDF.
+              </p>
+            </div>
+          </aside>
+        </section>
+
+        <section class="pdf-to-text panel" aria-labelledby="pdf-to-text-title">
+          <div class="section-heading">
+            <p class="eyebrow">PDF to text</p>
+            <h2 id="pdf-to-text-title">Upload PDF, copy text</h2>
+            <p class="helper-text">
+              Works best with text-based PDFs, including files made by this app. Scanned image-only PDFs need OCR software.
+            </p>
+          </div>
+
+          <div class="drop-zone">
+            <label for="pdf-file">Choose a PDF file</label>
+            <input id="pdf-file" type="file" accept="application/pdf,.pdf" />
+            <p id="pdf-file-help" class="helper-text">The selected PDF is read locally in your browser.</p>
+          </div>
+
+          <div class="field">
+            <label for="extracted-text">Extracted text</label>
+            <textarea id="extracted-text" rows="12" placeholder="Extracted PDF text will appear here..." readonly></textarea>
+          </div>
+
+          <div class="actions">
+            <button id="copy-text-button" type="button">Copy text</button>
+            <button id="download-text-button" type="button" class="button-secondary">Download .txt</button>
+            <button id="clear-pdf-button" type="button" class="button-secondary">Clear PDF</button>
+          </div>
+
+          <p id="pdf-status-message" class="status" role="status" aria-live="polite">
+            Select a PDF to extract text.
+          </p>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
