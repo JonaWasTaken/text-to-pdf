@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Text to PDF Converter</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Instant document maker</p>
+          <h1 id="page-title">Text to PDF Converter</h1>
+          <p class="hero-copy">
+            Paste or type your text, tune the page settings, and download a clean PDF directly from your browser.
+          </p>
+        </div>
+        <div class="hero-card" aria-label="Privacy note">
+          <span class="hero-card__icon" aria-hidden="true">🔒</span>
+          <div>
+            <strong>Private by design</strong>
+            <p>Your PDF is generated locally. No text is uploaded to a server.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="converter" aria-label="Text to PDF converter">
+        <form id="pdf-form" class="panel controls">
+          <div class="field field--full">
+            <label for="source-text">Your text</label>
+            <textarea
+              id="source-text"
+              name="source-text"
+              rows="16"
+              placeholder="Type or paste text here..."
+            >Welcome to your new PDF!\n\nReplace this text with your own content, choose your page settings, and click Download PDF.</textarea>
+          </div>
+
+          <div class="field">
+            <label for="file-name">File name</label>
+            <input id="file-name" name="file-name" type="text" value="my-document" />
+          </div>
+
+          <div class="field">
+            <label for="page-size">Page size</label>
+            <select id="page-size" name="page-size">
+              <option value="letter">Letter</option>
+              <option value="a4">A4</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="font-size">Font size</label>
+            <input id="font-size" name="font-size" type="number" min="8" max="28" value="12" />
+          </div>
+
+          <div class="field">
+            <label for="margin-size">Margin</label>
+            <select id="margin-size" name="margin-size">
+              <option value="36">Narrow</option>
+              <option value="54" selected>Standard</option>
+              <option value="72">Wide</option>
+            </select>
+          </div>
+
+          <div class="actions field--full">
+            <button id="download-button" type="submit">Download PDF</button>
+            <button id="clear-button" type="button" class="button-secondary">Clear text</button>
+          </div>
+        </form>
+
+        <aside class="panel preview" aria-labelledby="preview-title">
+          <div class="preview-sheet">
+            <h2 id="preview-title">Live summary</h2>
+            <dl class="stats">
+              <div>
+                <dt>Characters</dt>
+                <dd id="character-count">0</dd>
+              </div>
+              <div>
+                <dt>Words</dt>
+                <dd id="word-count">0</dd>
+              </div>
+              <div>
+                <dt>Estimated pages</dt>
+                <dd id="page-count">1</dd>
+              </div>
+            </dl>
+            <p id="status-message" class="status" role="status" aria-live="polite">
+              Ready to create your PDF.
+            </p>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
