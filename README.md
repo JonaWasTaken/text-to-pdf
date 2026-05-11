@@ -1,6 +1,9 @@
 # Text and PDF Converter
 
 A small, dependency-free browser app that converts typed or pasted text into a downloadable PDF and extracts text from text-based PDFs.
+# Text to PDF Converter
+
+A small, dependency-free browser app that converts typed or pasted text into a downloadable PDF.
 
 ## Features
 
@@ -10,6 +13,9 @@ A small, dependency-free browser app that converts typed or pasted text into a d
 - Letter and A4 page sizes, configurable font size, and margin presets.
 - Live character, word, and estimated page counts for PDF creation.
 - Copy or download extracted PDF text as a `.txt` file.
+- Local PDF generation with no server upload.
+- Letter and A4 page sizes, configurable font size, and margin presets.
+- Live character, word, and estimated page counts.
 
 ## Run locally
 
